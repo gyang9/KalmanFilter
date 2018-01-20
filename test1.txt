@@ -1,0 +1,156 @@
+now doing sample 0 and distance cut for angular resolution is: 100
+event 0
+1200 1195 5
+event 1
+1200 1195 5
+starting real KALFIT.. 
+event 2
+1205 1205 5
+starting real KALFIT.. 
+event 3
+1195 1205 5
+starting real KALFIT.. 
+event 4
+1205 1205 5
+starting real KALFIT.. 
+event 5
+1200 1195 5
+starting real KALFIT.. 
+event 6
+1195 1205 5
+starting real KALFIT.. 
+event 7
+1195 1205 5
+starting real KALFIT.. 
+event 8
+1200 1195 5
+starting real KALFIT.. 
+event 9
+1195 1205 5
+starting real KALFIT.. 
+event 10
+1200 1195 5
+starting real KALFIT.. 
+event 11
+1205 1205 5
+starting real KALFIT.. 
+event 12
+1190 1195 5
+starting real KALFIT.. 
+event 13
+1200 1195 5
+starting real KALFIT.. 
+event 14
+1200 1195 5
+starting real KALFIT.. 
+event 15
+1195 1205 5
+starting real KALFIT.. 
+event 16
+1195 1205 5
+starting real KALFIT.. 
+event 17
+1195 1205 5
+starting real KALFIT.. 
+event 18
+1205 1205 5
+starting real KALFIT.. 
+event 19
+1190 1195 5
+starting real KALFIT.. 
+event 20
+1205 1205 5
+starting real KALFIT.. 
+event 21
+1190 1195 5
+starting real KALFIT.. 
+event 22
+1195 1205 5
+starting real KALFIT.. 
+event 23
+1200 1195 5
+starting real KALFIT.. 
+event 24
+1210 1195 5
+starting real KALFIT.. 
+event 25
+1205 1205 5
+starting real KALFIT.. 
+event 26
+1210 1195 5
+starting real KALFIT.. 
+event 27
+1210 1195 5
+starting real KALFIT.. 
+event 28
+1195 1205 5
+starting real KALFIT.. 
+event 29
+1195 1205 5
+starting real KALFIT.. 
+event 30
+1205 1205 5
+starting real KALFIT.. 
+event 31
+1200 1195 5
+starting real KALFIT.. 
+event 32
+1205 1205 5
+starting real KALFIT.. 
+event 33
+1200 1195 5
+starting real KALFIT.. 
+event 34
+1190 1195 5
+starting real KALFIT.. 
+event 35
+1210 1195 5
+starting real KALFIT.. 
+event 36
+1200 1195 5
+starting real KALFIT.. 
+event 37
+1190 1205 15
+starting real KALFIT.. 
+event 38
+1195 1205 5
+starting real KALFIT.. 
+event 39
+1195 1205 5
+starting real KALFIT.. 
+event 40
+1195 1205 5
+starting real KALFIT.. 
+event 41
+1200 1195 5
+starting real KALFIT.. 
+event 42
+1210 1195 5
+starting real KALFIT.. 
+event 43
+1205 1205 5
+starting real KALFIT.. 
+event 44
+1205 1205 5
+starting real KALFIT.. 
+event 45
+1195 1205 5
+starting real KALFIT.. 
+event 46
+1200 1195 5
+starting real KALFIT.. 
+event 47
+1200 1195 5
+starting real KALFIT.. 
+event 48
+1190 1195 5
+starting real KALFIT.. 
+event 49
+1195 1205 5
+starting real KALFIT.. 
+event 50
+1205 1205 5
+starting real KALFIT.. 
+event 51
+1205 1205 5
+starting real KALFIT.. 
