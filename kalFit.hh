@@ -1,6 +1,3 @@
-#ifndef KAL_FIT
-#define KAL_FIT
-
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -80,20 +77,30 @@ using namespace RooFit;
 //using namespace std;
 
 class KALFIT : public RooAbsReal {
+
 public:
+
   KALFIT(const char* name);
   KALFIT (const KALFIT & other, const char* name = 0): RooAbsReal(other,name) {};
-  ~KALFIT();
+  virtual TObject* clone(const char* newname) const {return new KALFIT (*this, newname);};
+  virtual ~KALFIT();
+
+  KALFIT (const KALFIT & KALFIT );
 
   //double GetIntegral(TString hyp);
 
   void STARTFIT(TH2D* h);
 
-    Double_t FillEv(RooListProxy* _pulls) const;
+    Double_t FillEv(RooListProxy* _pulls, TH1D* Mmean, TH1D* Mvariance, TH1D* MPE, TH1D* MMCS) const;
 
+    TH1D* Mmean;
+    TH1D* Mvariance;
+    TH1D* MPE;
+    TH1D* MMCS;
+    
     Double_t ExtraPull(RooListProxy* _pulls) const;
 
-    TMatrixD* prepareMatrix(TH2D* conv) const;
+    TMatrixD* prepareMatrix(TH1D* Mmean, TH1D* Mvariance, TH1D* MPE, TH1D* MMCS) const;
 
     void setSyst(Double_t syst) ;
 
@@ -161,6 +168,14 @@ public:
     RooArgList _parlist;
     RooListProxy* _pulls;
 
+    //Double_t statL[200];
+    //Double_t meanL[200];
+    //Double_t varL[200];
+    //Double_t mscL[200];
+    Double_t currY;
+    Double_t currYl;
+    Double_t thetaZ;
+
   virtual  Double_t evaluate() const ;
 
 private:
@@ -170,4 +185,3 @@ private:
   
 };
 
-#endif
