@@ -47,8 +47,8 @@ KALFIT::~KALFIT()
 void KALFIT::Init(){
 
   _pulls     = new RooListProxy("_pulls","_pulls",this);
-  RooRealVar* Par1 = new RooRealVar("par1","par1",TMath::ASin(TMath::Sqrt(0.85))/2.,0,100);
-  RooRealVar* Par2 = new RooRealVar("par2","par2",TMath::ASin(TMath::Sqrt(0.95))/2.,0,100);
+  RooRealVar* Par1 = new RooRealVar("par1","par1",0,-TMath::Pi(),TMath::Pi());
+  RooRealVar* Par2 = new RooRealVar("par2","par2",0,-30,30);
   RooRealVar* Par3 = new RooRealVar("par3","par3",0.1,0,100);
   RooRealVar* Par4 = new RooRealVar("par4","par4",-1.5,-10,10);
   RooRealVar* Par5 = new RooRealVar("par5","par5",0.000075,-10,10);
@@ -92,7 +92,12 @@ _pulls->add(_parlist);
 
 TMatrixD* KALFIT::prepareMatrix(TH1D* Mmean, TH1D* Mvariance, TH1D* MPE, TH1D* MMCS) const
 {
-Int_t nbin = Mmean->GetNbinsX();
+//Int_t nbin = Mmean->GetNbinsX();
+Int_t nbin = 0;
+for(Int_t loopBB = 0; loopBB<Mmean->GetNbinsX(); loopBB++){
+if(Mmean->GetBinContent(loopBB+1)==0 && Mmean->GetBinContent(loopBB+2)==0 ) nbin = loopBB; break;
+}
+
 TMatrixD* convMat = new TMatrixD(nbin,nbin);
 
 for(Int_t i=0;i<nbin;i++){
@@ -110,14 +115,20 @@ return convMat;
 
 Double_t KALFIT ::FillEv( RooListProxy* _pulls, TH1D* Mmean, TH1D* Mvariance, TH1D* MPE, TH1D* MMCS ) const
 {
-Int_t nbin = Mmean->GetNbinsX();
+Int_t nbin = 0;
+for(Int_t loopBB = 0; loopBB<Mmean->GetNbinsX(); loopBB++){
+if(Mmean->GetBinContent(loopBB+1)==0 && Mmean->GetBinContent(loopBB+2)==0 ) nbin = loopBB; break;
+}
 
 TVectorD* fVec = new TVectorD(nbin);
 TVectorD* fData = new TVectorD(nbin);
 
-   for(Int_t i=0;i<nbin;i++){ (*fVec)[i] = TMath::Tan(((RooAbsReal*)_pulls->at(0))->getVal())* 10*i + ((RooAbsReal*)_pulls->at(1))->getVal()*i; 
+   for(Int_t i=0;i<nbin;i++){ (*fVec)[i] = Mmean->GetBinContent(0) + TMath::Tan(((RooAbsReal*)_pulls->at(0))->getVal())* 10*i + ((RooAbsReal*)_pulls->at(1))->getVal()*i; 
 	(*fData)[i] = Mmean->GetBinContent(i+1);
 	}
+
+   fVec->Print();
+   fData->Print();
 
 TMatrixD* covMat = this->prepareMatrix(Mmean,Mvariance,MPE,MMCS);
 
@@ -133,6 +144,8 @@ TMatrixD* covMat = this->prepareMatrix(Mmean,Mvariance,MPE,MMCS);
 
    Double_t fResult = TMath::Abs(mulVec*(*fVec));
 
+   std::cout<<"finished filling in.. "<<fResult<<std::endl;
+   return fResult;
 
 }
 
@@ -212,7 +225,7 @@ int muonID = 0;
 std::cout<<"now doing sample "<<atoi(argv[1])<< " and distance cut for angular resolution is: "<<atof(argv[2])<<std::endl;
 
 //TFile file(Form("/home/gyang/work/dune-ndx/spack/var/spack/stage/edep-sim-master-rpl36hsf6e7fnmtgw4pd74gyffybpekl/edep-sim/SimChain/canDeleteData/testEvent_particleGun2000MeVMuon_2018_shift_sample24.root"));
-TFile file(Form("testEvent_particleGun1000MeVMuon_2018_shift_sample4.root",argv[1]));
+TFile file(Form("testEvent_particleGun1000MeVMuon_noMCS_30cone_sample2.root",argv[1]));
 TTree* c = (TTree*)file.Get("EDepSimTree");
 c->SetBranchAddress("event",&event);
 c->SetBranchAddress("hitLocation",&hitLocation);
@@ -244,17 +257,17 @@ TH2F* hist2D_XZ_ADC[nnevent];
 TH2F* hist2D_YZ_ADC[nnevent];
 
 for(Int_t i=0;i<nnevent;i++){
-hist2D_XY_Q[i] = new TH2F("","",200,0,2000,200,0,2000);
-hist2D_XZ_Q[i] = new TH2F("","",200,0,2000,240,0,2400);
-hist2D_YZ_Q[i] = new TH2F("","",200,0,2000,240,0,2400);
+hist2D_XY_Q[i] = new TH2F("","",240,0,2400,240,0,2400);
+hist2D_XZ_Q[i] = new TH2F("","",240,0,2400,200,0,2000);
+hist2D_YZ_Q[i] = new TH2F("","",240,0,2400,200,0,2000);
 
-hist2D_XY_PE[i] = new TH2F("","",200,0,2000,200,0,2000);
-hist2D_XZ_PE[i] = new TH2F("","",200,0,2000,240,0,2400);
-hist2D_YZ_PE[i] = new TH2F("","",200,0,2000,240,0,2400);
+hist2D_XY_PE[i] = new TH2F("","",240,0,2400,240,0,2400);
+hist2D_XZ_PE[i] = new TH2F("","",240,0,2400,200,0,2000);
+hist2D_YZ_PE[i] = new TH2F("","",240,0,2400,200,0,2000);
 
-hist2D_XY_ADC[i] = new TH2F("","",200,0,2000,200,0,2000);
-hist2D_XZ_ADC[i] = new TH2F("","",200,0,2000,240,0,2400);
-hist2D_YZ_ADC[i] = new TH2F("","",200,0,2000,240,0,2400);
+hist2D_XY_ADC[i] = new TH2F("","",240,0,2400,240,0,2400);
+hist2D_XZ_ADC[i] = new TH2F("","",240,0,2400,200,0,2000);
+hist2D_YZ_ADC[i] = new TH2F("","",240,0,2400,200,0,2000);
 }
 
 TH2D* hist2D_XY_E[3][nnevent];
@@ -262,9 +275,9 @@ TH2D* hist2D_XZ_E[3][nnevent];
 TH2D* hist2D_YZ_E[3][nnevent];
 for(Int_t i=0;i<3;i++){
 for(Int_t j=0;j<nnevent;j++){
-hist2D_XY_E[i][j] = new TH2D("","",200,0,2000,200,0,2000);
-hist2D_YZ_E[i][j] = new TH2D("","",200,0,2000,240,0,2400);
-hist2D_XZ_E[i][j] = new TH2D("","",200,0,2000,240,0,2400);
+hist2D_XY_E[i][j] = new TH2D("","",240,0,2400,240,0,2400);
+hist2D_YZ_E[i][j] = new TH2D("","",240,0,2400,200,0,2000);
+hist2D_XZ_E[i][j] = new TH2D("","",240,0,2400,200,0,2000);
 }
 }
 
@@ -302,6 +315,7 @@ std::cout<<"event "<<event<<std::endl;
 std::cout<<hitLocation[0]<<" "<<hitLocation[1]<<" "<<hitLocation[2]<<std::endl;
 }
 if( !newEvent ){
+std::cout<<"... "<<hitLocation[1]<<" "<<hitLocation[2]<<" "<<hitPE[1]+hitPE[2]<<std::endl;
 hist2D_XY_Q[event]->Fill(hitLocation[0],hitLocation[1],Q[0]+Q[1]);
 hist2D_XZ_Q[event]->Fill(hitLocation[0],hitLocation[2],Q[0]+Q[2]);
 hist2D_YZ_Q[event]->Fill(hitLocation[1],hitLocation[2],Q[1]+Q[2]);
@@ -377,12 +391,11 @@ if(newEvent && ii>0){
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
 RooFitResult* res;
 rep = new KALFIT ("_rep");
 char formula[10];
 
-int nbinn = hist2D_YZ_E[0][event]->GetNbinsY();
+int nbinn = hist2D_YZ_PE[event-1]->GetNbinsY();
 
 double statL[nbinn]={};
 double meanL[nbinn]={};
@@ -399,23 +412,35 @@ double currV = 0;
 
 double inputMom = 1000;
 
+std::cout<<"integrated: "<<hist2D_YZ_PE[event-1]->Integral()<<std::endl;
+
 for(Int_t rbin=0;rbin<nbinn;rbin++)
 { 
-for(Int_t rrbin=0;rrbin<hist2D_YZ_E[0][event]->GetNbinsX();rrbin++){
-currY += rrbin*hist2D_YZ_E[0][event] -> GetBinContent(rbin+1,rrbin); 
-currYl += hist2D_YZ_E[0][event] -> GetBinContent(rbin+1,rrbin);
+for(Int_t rrbin=0;rrbin<hist2D_YZ_PE[event-1]->GetNbinsX();rrbin++){
+currY += rrbin*hist2D_YZ_PE[event-1] -> GetBinContent(rrbin+1,rbin+1); 
+currYl += hist2D_YZ_PE[event-1] -> GetBinContent(rrbin+1,rbin+1);
 }
-meanL[rbin] = currY/currYl;
+if(currYl!=0) meanL[rbin] = currY/currYl;
 
-for(Int_t rrbin=0;rrbin<hist2D_YZ_E[0][event]->GetNbinsX();rrbin++){
-currV += hist2D_YZ_E[0][event] -> GetBinContent(rbin+1,rrbin)* (rrbin-meanL[rbin])*(rrbin-meanL[rbin]) ;
+std::cout<<"currY and currYl "<<currY<<" "<<currYl<<std::endl;
+
+for(Int_t rrbin=0;rrbin<hist2D_YZ_PE[event-1]->GetNbinsX();rrbin++){
+currV += hist2D_YZ_PE[event-1] -> GetBinContent(rrbin+1,rbin)* (rrbin-meanL[rbin])*(rrbin-meanL[rbin]) ;
 }
-varL[rbin] = currV/currYl;
+if(currYl!=0) varL[rbin] = currV/currYl;
+
+std::cout<<"currV "<<currV<<std::endl;
 
 statL[rbin] = currYl;
 
 thetaZ = 13.6/ inputMom * 6 * TMath::Sqrt((rbin+1)/40.) * (1 + 0.038 * TMath::Log((rbin+1)/40.));
 mscL[rbin] = thetaZ * 10 * rbin;
+
+std::cout<<"statL, thetaZ and mscL "<<currYl<<" "<<thetaZ<<" "<<mscL[rbin]<<std::endl;
+
+currY=0;
+currYl=0;
+currV=0;
 
 }
 
@@ -432,6 +457,8 @@ MPE -> SetBinContent(rbin+1,statL[rbin]);
 MMCS -> SetBinContent(rbin+1,mscL[rbin]);
 }
 
+std::cout<<"setted up the input histograms.."<<std::endl;
+
 rep->FillEv(rep->getPullList(),Mmean,Mvariance,MPE,MMCS);
 
 RooArgList list("list");
@@ -439,11 +466,14 @@ list.add(*rep);
 sprintf(formula,"%s","@0");
 RooFormulaVar* fcn = new RooFormulaVar("fit","fit",formula,list);
 
+std::cout<<"setting up the fitter step 1.."<<std::endl;
 
 RooMinuit m(*fcn);
 m.setStrategy(2);
 Double_t callsEDM[2] = {10500., 1.e-6};
 Int_t irf = 0;
+
+std::cout<<"setting up the fitter step 2.."<<std::endl;
 
 gMinuit->mnexcm("MIGRAD",callsEDM,2,irf);
 m.migrad();
@@ -452,6 +482,7 @@ m.migrad();
 res = m.save();
 double bestFit = res->minNll();
 
+std::cout<<"fitted.."<<std::endl;
 
 for(Int_t rbin=0;rbin<nbinn;rbin++){
 statL[rbin]=0;meanL[rbin]=0;varL[rbin]=0;mscL[rbin]=0;
