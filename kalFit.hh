@@ -1,3 +1,5 @@
+
+
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -8,6 +10,7 @@
 #include <math.h>
 #include <sstream>
 #include <TList.h>
+
 #include <TROOT.h>
 #include <TCanvas.h>
 #include <TApplication.h>
@@ -33,6 +36,7 @@
 #include <TMatrixD.h>
 #include <TVectorT.h>
 #include <TDecompChol.h>
+
 #include <RooFit.h>
 #include "RooGlobalFunc.h"
 #include "RooAbsReal.h"
@@ -76,35 +80,33 @@
 using namespace RooFit;
 //using namespace std;
 
-class KALFIT : public RooAbsReal {
+  class KALFIT : public RooAbsReal {
 
-public:
+  public:
 
-  KALFIT(const char* name);
-  KALFIT (const KALFIT & other, const char* name = 0): RooAbsReal(other,name) {};
-  virtual TObject* clone(const char* newname) const {return new KALFIT (*this, newname);};
-  virtual ~KALFIT();
+  	KALFIT(const char* name);
+  	KALFIT (const KALFIT & other, const char* name = 0): RooAbsReal(other,name) {};
+  	virtual TObject* clone(const char* newname) const {return new KALFIT (*this, newname);};
+  	virtual ~KALFIT();
 
-  KALFIT (const KALFIT & KALFIT );
+  	KALFIT (const KALFIT & KALFIT );
+
+    	KALFIT & operator=(const KALFIT & rhs);
+
+    	RooFormulaVar* Chi2() ;
 
   //double GetIntegral(TString hyp);
 
-  void STARTFIT(TH2D* h);
+  	void STARTFIT(TH2D* h);
 
-    Double_t FillEv(RooListProxy* _pulls, TH1D* Mmean, TH1D* Mvariance, TH1D* MPE, TH1D* MMCS) const;
-
-    TH1D* Mmean;
-    TH1D* Mvariance;
-    TH1D* MPE;
-    TH1D* MMCS;
+    	Double_t FillEv(RooListProxy* _pulls, TH1D* Mmean, TH1D* Mvariance, TH1D* MPE, TH1D* MMCS) const;
+	Double_t FillEv(RooListProxy* _pulls) const;
     
     Double_t ExtraPull(RooListProxy* _pulls) const;
 
     TMatrixD* prepareMatrix(TH1D* Mmean, TH1D* Mvariance, TH1D* MPE, TH1D* MMCS) const;
 
     void setSyst(Double_t syst) ;
-
-    RooFormulaVar* Chi2() ;
 
     void setData(RooListProxy* _pulls) const;
 
@@ -176,12 +178,24 @@ public:
     Double_t currYl;
     Double_t thetaZ;
 
-  virtual  Double_t evaluate() const ;
+    virtual  Double_t evaluate() const;
 
-private:
+    void Init();
+    void Delete();
 
-  void Init();
-  void Delete();
-  
+	void SetHistograms(TH1D* MmeanS, TH1D* MvarianceS, TH1D* MPES, TH1D* MMCSS);
+
+	TH1D* GetMmean() const;
+	TH1D* GetMvariance() const;
+	TH1D* GetMPE() const;
+	TH1D* GetMMCS() const;
+
+	TH1D* Mmean;
+	TH1D* Mvariance;
+	TH1D* MPE;
+	TH1D* MMCS;
+
+  protected:  
+
 };
 

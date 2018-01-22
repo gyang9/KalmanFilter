@@ -1,12 +1,9 @@
 
 //
-// TODO:
-// - evaluate PID using p-value for both hypotheses
-//   and calculating e.g. the CLs = pvalue_muon / (1-pvalue_prot)
-// 
+// fitter for B-field in 3DST
+// Author: Guang Yang 
 
 
-#include <TMath.h>
 #include <TString.h>
 #include "TMath.h"
 
@@ -25,13 +22,55 @@
 //#define DEBUG 0 // 0 --> disable debugging
                 // 1 --> enable debugging
 
-//using namespace std;
+using namespace std;
 
 
 KALFIT::KALFIT(const char* name )
 : RooAbsReal(name, name)
 {
-  this->Init();
+
+  _pulls     = new RooListProxy("_pulls","_pulls",this);
+  RooRealVar* Par1 = new RooRealVar("par1","par1",0,-TMath::Pi(),TMath::Pi());
+  RooRealVar* Par2 = new RooRealVar("par2","par2",0,-30,30);
+  RooRealVar* Par3 = new RooRealVar("par3","par3",0.1,0,100);
+  RooRealVar* Par4 = new RooRealVar("par4","par4",-1.5,-10,10);
+  RooRealVar* Par5 = new RooRealVar("par5","par5",0.000075,-10,10);
+  RooRealVar* Par6 = new RooRealVar("par6","par6",0.00238,-10,10);
+  RooRealVar* Par7 = new RooRealVar("par7","par7",0.00244,-10,10);
+  RooRealVar* Par8 = new RooRealVar("par8","par8",1,0.,100);
+  RooRealVar* Par9 = new RooRealVar("par9","par9",1,0.,100);
+  RooRealVar* Par10 = new RooRealVar("par10","par10",1,0.,100);
+  RooRealVar* Par11 = new RooRealVar("par11","par11",1,0.,100);
+
+
+Par1->setConstant(false);
+Par2->setConstant(false);
+Par3->setConstant(true);
+Par4->setConstant(true);
+Par5->setConstant(true);
+Par6->setConstant(true);
+Par7->setConstant(true);
+Par8->setConstant(true);
+Par9->setConstant(true);
+Par10->setConstant(true);
+Par11->setConstant(true);
+
+
+_parlist.add(*Par1);
+_parlist.add(*Par2);
+_parlist.add(*Par3);
+_parlist.add(*Par4);
+_parlist.add(*Par5);
+_parlist.add(*Par6);
+_parlist.add(*Par7);
+_parlist.add(*Par8);
+_parlist.add(*Par9);
+_parlist.add(*Par10);
+_parlist.add(*Par11);
+_pulls->add(_parlist);
+
+  this->addServerList(*_pulls);
+  //this->Init();
   std::cout<<"starting KALFIT.. "<<std::endl;
 }
 
@@ -39,7 +78,7 @@ KALFIT::KALFIT(const char* name )
 
 KALFIT::~KALFIT()
 {
-  this->Delete();
+  //this->Delete();
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -93,38 +132,64 @@ _pulls->add(_parlist);
 TMatrixD* KALFIT::prepareMatrix(TH1D* Mmean, TH1D* Mvariance, TH1D* MPE, TH1D* MMCS) const
 {
 //Int_t nbin = Mmean->GetNbinsX();
+Int_t nbin = 10;
+/*
 Int_t nbin = 0;
 for(Int_t loopBB = 0; loopBB<Mmean->GetNbinsX(); loopBB++){
-if(Mmean->GetBinContent(loopBB+1)==0 && Mmean->GetBinContent(loopBB+2)==0 ) nbin = loopBB; break;
+if(Mmean->GetBinContent(loopBB+1)==0 && Mmean->GetBinContent(loopBB+2)==0&& Mmean->GetBinContent(loopBB+3)==0 && Mmean->GetBinContent(loopBB+4)==0 ) nbin = loopBB; break;
 }
-
+*/
 TMatrixD* convMat = new TMatrixD(nbin,nbin);
 
+Int_t startingPP = 0;
+   for(Int_t i=0;i<nbin;i++){
+        if(Mmean->GetBinContent(i+1)!=0){
+        startingPP = i;
+                }
+        }
+
 for(Int_t i=0;i<nbin;i++){
-(*convMat)(i,i) = MPE->GetBinContent(i+1);
+(*convMat)(i,i) = MPE->GetBinContent(startingPP+i+1);
 }
     for(Int_t i=0;i<nbin;i++){
       for(Int_t j=0;j<nbin; j++){
-        (*convMat)(i,j) += Mvariance->GetBinContent(i+1)*Mvariance->GetBinContent(j+1);
-	        (*convMat)(i,j) += MMCS->GetBinContent(i+1)*MMCS->GetBinContent(j+1);
+        (*convMat)(i,j) += Mvariance->GetBinContent(startingPP+i+1)*Mvariance->GetBinContent(startingPP+j+1);
+	        (*convMat)(i,j) += MMCS->GetBinContent(startingPP+i+1)*MMCS->GetBinContent(startingPP+j+1);
                                 }
                              }
 return convMat;
 }
 
 
-Double_t KALFIT ::FillEv( RooListProxy* _pulls, TH1D* Mmean, TH1D* Mvariance, TH1D* MPE, TH1D* MMCS ) const
+Double_t KALFIT ::FillEv( RooListProxy* _pulls ) const 
 {
-Int_t nbin = 0;
-for(Int_t loopBB = 0; loopBB<Mmean->GetNbinsX(); loopBB++){
-if(Mmean->GetBinContent(loopBB+1)==0 && Mmean->GetBinContent(loopBB+2)==0 ) nbin = loopBB; break;
-}
+TH1D* Mmean     =this->GetMmean();
+TH1D* Mvariance =this->GetMvariance();
+TH1D* MPE       =this->GetMPE();
+TH1D* MMCS      =this->GetMMCS();
 
+std::cout<<"testing input for fit: "<<Mmean->Integral()<<" "<<Mvariance->Integral()<<" "<<MPE->Integral()<<" "<<MMCS->Integral()<<std::endl;
+Int_t nbin = 10;
+/*
+for(Int_t loopBB = 0; loopBB<Mmean->GetNbinsX(); loopBB++){
+if(Mmean->GetBinContent(loopBB+1)==0 && Mmean->GetBinContent(loopBB+2)==0 && Mmean->GetBinContent(loopBB+3)==0 && Mmean->GetBinContent(loopBB+4)==0 ) nbin = loopBB; break;
+}
+*/
+std::cout<<"number of bins for fit: "<<nbin<<std::endl;
 TVectorD* fVec = new TVectorD(nbin);
 TVectorD* fData = new TVectorD(nbin);
 
-   for(Int_t i=0;i<nbin;i++){ (*fVec)[i] = Mmean->GetBinContent(0) + TMath::Tan(((RooAbsReal*)_pulls->at(0))->getVal())* 10*i + ((RooAbsReal*)_pulls->at(1))->getVal()*i; 
-	(*fData)[i] = Mmean->GetBinContent(i+1);
+Int_t startingPP = 0;
+   for(Int_t i=0;i<nbin;i++){
+        if(Mmean->GetBinContent(i+1)!=0){
+	startingPP = i;
+		}
+	}
+	
+
+   for(Int_t i=0;i<nbin;i++){ 
+	(*fVec)[i] = Mmean->GetBinContent(startingPP+1) + TMath::Tan(((RooAbsReal*)_pulls->at(0))->getVal())* 10*i + ((RooAbsReal*)_pulls->at(1))->getVal()*i;
+	(*fData)[i] = Mmean->GetBinContent(startingPP+1);
 	}
 
    fVec->Print();
@@ -154,10 +219,10 @@ Double_t KALFIT ::ExtraPull (RooListProxy* _pulls) const
 }
 
 
-Double_t KALFIT ::evaluate() const
+Double_t KALFIT ::evaluate() const 
 {
 
-Double_t matPart = this->FillEv(_pulls,Mmean,Mvariance,MPE,MMCS);
+Double_t matPart = this -> FillEv(_pulls);
 
 Double_t extraPull = this -> ExtraPull (_pulls);
 Double_t tot = matPart + extraPull; //If needed, add pull terms here.
@@ -180,6 +245,26 @@ return _pulls;
 }
 
 
+void KALFIT::SetHistograms(TH1D* MmeanS, TH1D* MvarianceS, TH1D* MPES, TH1D* MMCSS)
+{
+Mmean = MmeanS;
+Mvariance = MvarianceS;
+MPE = MPES;
+MMCS = MMCSS;
+}
+
+TH1D* KALFIT::GetMmean() const{
+return Mmean;
+}
+TH1D* KALFIT::GetMvariance() const{
+return Mvariance;
+}
+TH1D* KALFIT::GetMPE() const{
+return MPE;
+}
+TH1D* KALFIT::GetMMCS() const{
+return MMCS;
+}
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -422,6 +507,7 @@ currYl += hist2D_YZ_PE[event-1] -> GetBinContent(rrbin+1,rbin+1);
 }
 if(currYl!=0) meanL[rbin] = currY/currYl;
 
+std::cout<<"bin numbers for Y and Z: "<<hist2D_YZ_PE[event-1]->GetNbinsX()<<" "<<nbinn<<std::endl;
 std::cout<<"currY and currYl "<<currY<<" "<<currYl<<std::endl;
 
 for(Int_t rrbin=0;rrbin<hist2D_YZ_PE[event-1]->GetNbinsX();rrbin++){
@@ -444,22 +530,23 @@ currV=0;
 
 }
 
-std::cout<<"loading status done.."<<std::endl;
+std::cout<<"loading status done.. n of bins.. "<<" "<<nbinn<<std::endl;
 
-TH1D* Mmean = new TH1D("","",nbinn,0,nbinn); 
-TH1D* Mvariance= new TH1D("","",nbinn,0,nbinn);; 
-TH1D* MPE= new TH1D("","",nbinn,0,nbinn);; 
-TH1D* MMCS= new TH1D("","",nbinn,0,nbinn);;
+TH1D* MmeanS = new TH1D("","",nbinn,0,nbinn); 
+TH1D* MvarianceS= new TH1D("","",nbinn,0,nbinn);; 
+TH1D* MPES= new TH1D("","",nbinn,0,nbinn);; 
+TH1D* MMCSS= new TH1D("","",nbinn,0,nbinn);;
 for(Int_t rbin=0;rbin<nbinn;rbin++){
-Mmean -> SetBinContent(rbin+1,meanL[rbin]);
-Mvariance -> SetBinContent(rbin+1,varL[rbin]);
-MPE -> SetBinContent(rbin+1,statL[rbin]);
-MMCS -> SetBinContent(rbin+1,mscL[rbin]);
+MmeanS -> SetBinContent(rbin+1,meanL[rbin]);
+MvarianceS -> SetBinContent(rbin+1,varL[rbin]);
+MPES -> SetBinContent(rbin+1,statL[rbin]);
+MMCSS -> SetBinContent(rbin+1,mscL[rbin]);
 }
 
 std::cout<<"setted up the input histograms.."<<std::endl;
 
-rep->FillEv(rep->getPullList(),Mmean,Mvariance,MPE,MMCS);
+rep->SetHistograms(MmeanS,MvarianceS,MPES,MMCSS);
+rep->FillEv(rep->getPullList());
 
 RooArgList list("list");
 list.add(*rep);
@@ -473,16 +560,18 @@ m.setStrategy(2);
 Double_t callsEDM[2] = {10500., 1.e-6};
 Int_t irf = 0;
 
+std::cout<<"input values for pull paras.. "<<rep->getPar(0)<<" "<<rep->getPar(1)<<std::endl;
 std::cout<<"setting up the fitter step 2.."<<std::endl;
 
 gMinuit->mnexcm("MIGRAD",callsEDM,2,irf);
+std::cout<<"running ?? "<<std::endl;
 m.migrad();
 //m.hesse();
-////m.minos(); 
+//m.minos(); 
 res = m.save();
 double bestFit = res->minNll();
 
-std::cout<<"fitted.."<<std::endl;
+std::cout<<"fitted.. chi2.. "<<bestFit<<" charge value.. "<<rep->getPar(1)<<std::endl;
 
 for(Int_t rbin=0;rbin<nbinn;rbin++){
 statL[rbin]=0;meanL[rbin]=0;varL[rbin]=0;mscL[rbin]=0;
